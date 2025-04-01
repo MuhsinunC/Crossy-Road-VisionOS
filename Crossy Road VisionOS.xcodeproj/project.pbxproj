@@ -1,0 +1,477 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CEADB3A02D9CAEC90030A83B /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = CEADB39F2D9CAEC90030A83B /* RealityKitContent */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CEADB3B32D9CAECA0030A83B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CEADB3922D9CAEC90030A83B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CEADB3992D9CAEC90030A83B;
+			remoteInfo = "Crossy Road VisionOS";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		CEADB39A2D9CAEC90030A83B /* Crossy Road VisionOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Crossy Road VisionOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEADB39E2D9CAEC90030A83B /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
+		CEADB3B22D9CAECA0030A83B /* Crossy Road VisionOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Crossy Road VisionOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CEADB3B82D9CAECA0030A83B /* Exceptions for "Crossy Road VisionOS" folder in "Crossy Road VisionOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CEADB3992D9CAEC90030A83B /* Crossy Road VisionOS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		CEADB39C2D9CAEC90030A83B /* Crossy Road VisionOS */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CEADB3B82D9CAECA0030A83B /* Exceptions for "Crossy Road VisionOS" folder in "Crossy Road VisionOS" target */,
+			);
+			path = "Crossy Road VisionOS";
+			sourceTree = "<group>";
+		};
+		CEADB3B52D9CAECA0030A83B /* Crossy Road VisionOSTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Crossy Road VisionOSTests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CEADB3972D9CAEC90030A83B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CEADB3A02D9CAEC90030A83B /* RealityKitContent in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEADB3AF2D9CAECA0030A83B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CEADB3912D9CAEC90030A83B = {
+			isa = PBXGroup;
+			children = (
+				CEADB39C2D9CAEC90030A83B /* Crossy Road VisionOS */,
+				CEADB39D2D9CAEC90030A83B /* Packages */,
+				CEADB3B52D9CAECA0030A83B /* Crossy Road VisionOSTests */,
+				CEADB39B2D9CAEC90030A83B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CEADB39B2D9CAEC90030A83B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CEADB39A2D9CAEC90030A83B /* Crossy Road VisionOS.app */,
+				CEADB3B22D9CAECA0030A83B /* Crossy Road VisionOSTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CEADB39D2D9CAEC90030A83B /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				CEADB39E2D9CAEC90030A83B /* RealityKitContent */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CEADB3992D9CAEC90030A83B /* Crossy Road VisionOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CEADB3B92D9CAECA0030A83B /* Build configuration list for PBXNativeTarget "Crossy Road VisionOS" */;
+			buildPhases = (
+				CEADB3962D9CAEC90030A83B /* Sources */,
+				CEADB3972D9CAEC90030A83B /* Frameworks */,
+				CEADB3982D9CAEC90030A83B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CEADB39C2D9CAEC90030A83B /* Crossy Road VisionOS */,
+			);
+			name = "Crossy Road VisionOS";
+			packageProductDependencies = (
+				CEADB39F2D9CAEC90030A83B /* RealityKitContent */,
+			);
+			productName = "Crossy Road VisionOS";
+			productReference = CEADB39A2D9CAEC90030A83B /* Crossy Road VisionOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CEADB3B12D9CAECA0030A83B /* Crossy Road VisionOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CEADB3BE2D9CAECA0030A83B /* Build configuration list for PBXNativeTarget "Crossy Road VisionOSTests" */;
+			buildPhases = (
+				CEADB3AE2D9CAECA0030A83B /* Sources */,
+				CEADB3AF2D9CAECA0030A83B /* Frameworks */,
+				CEADB3B02D9CAECA0030A83B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CEADB3B42D9CAECA0030A83B /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CEADB3B52D9CAECA0030A83B /* Crossy Road VisionOSTests */,
+			);
+			name = "Crossy Road VisionOSTests";
+			packageProductDependencies = (
+			);
+			productName = "Crossy Road VisionOSTests";
+			productReference = CEADB3B22D9CAECA0030A83B /* Crossy Road VisionOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CEADB3922D9CAEC90030A83B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					CEADB3992D9CAEC90030A83B = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					CEADB3B12D9CAECA0030A83B = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = CEADB3992D9CAEC90030A83B;
+					};
+				};
+			};
+			buildConfigurationList = CEADB3952D9CAEC90030A83B /* Build configuration list for PBXProject "Crossy Road VisionOS" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CEADB3912D9CAEC90030A83B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CEADB39B2D9CAEC90030A83B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CEADB3992D9CAEC90030A83B /* Crossy Road VisionOS */,
+				CEADB3B12D9CAECA0030A83B /* Crossy Road VisionOSTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CEADB3982D9CAEC90030A83B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEADB3B02D9CAECA0030A83B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CEADB3962D9CAEC90030A83B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEADB3AE2D9CAECA0030A83B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CEADB3B42D9CAECA0030A83B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CEADB3992D9CAEC90030A83B /* Crossy Road VisionOS */;
+			targetProxy = CEADB3B32D9CAECA0030A83B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		CEADB3BA2D9CAECA0030A83B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.muhsinunc.Crossy-Road-VisionOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+			};
+			name = Debug;
+		};
+		CEADB3BB2D9CAECA0030A83B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.muhsinunc.Crossy-Road-VisionOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+			};
+			name = Release;
+		};
+		CEADB3BC2D9CAECA0030A83B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = xros;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Debug;
+		};
+		CEADB3BD2D9CAECA0030A83B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = xros;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Release;
+		};
+		CEADB3BF2D9CAECA0030A83B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.muhsinunc.Crossy-Road-VisionOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Crossy Road VisionOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Crossy Road VisionOS";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Debug;
+		};
+		CEADB3C02D9CAECA0030A83B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.muhsinunc.Crossy-Road-VisionOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Crossy Road VisionOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Crossy Road VisionOS";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CEADB3952D9CAEC90030A83B /* Build configuration list for PBXProject "Crossy Road VisionOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEADB3BC2D9CAECA0030A83B /* Debug */,
+				CEADB3BD2D9CAECA0030A83B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CEADB3B92D9CAECA0030A83B /* Build configuration list for PBXNativeTarget "Crossy Road VisionOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEADB3BA2D9CAECA0030A83B /* Debug */,
+				CEADB3BB2D9CAECA0030A83B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CEADB3BE2D9CAECA0030A83B /* Build configuration list for PBXNativeTarget "Crossy Road VisionOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEADB3BF2D9CAECA0030A83B /* Debug */,
+				CEADB3C02D9CAECA0030A83B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CEADB39F2D9CAEC90030A83B /* RealityKitContent */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RealityKitContent;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = CEADB3922D9CAEC90030A83B /* Project object */;
+}
