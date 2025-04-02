@@ -13,6 +13,7 @@ enum EntityFactory {
         playerEntity.name = "Player"
         playerEntity.scale = properties.scale
         playerEntity.orientation = properties.rotation
+        playerEntity.position = properties.offset // Apply offset
         playerEntity.generateCollisionShapes(recursive: true)
         playerEntity.components.set(InputTargetComponent())
         playerEntity.components.set(PlayerComponent())
@@ -43,10 +44,15 @@ enum EntityFactory {
             laneModel.scale = properties.scale
             laneModel.orientation = properties.rotation
             
-            // Position the model correctly within the lane entity
+            // Base position calculation
             let centerOffset = -Float(Constants.laneSegments / 2) * Constants.laneSegmentWidth + Constants.laneSegmentWidth / 2
-            laneModel.position.x = centerOffset
-            laneModel.position.z = -Float(index) * Constants.laneWidth // Position based on index
+            var modelPosition = SIMD3<Float>.zero
+            modelPosition.x = centerOffset
+            modelPosition.z = -Float(index) * Constants.laneWidth // Position based on index
+            
+            // Apply additional offset from properties
+            modelPosition += properties.offset 
+            laneModel.position = modelPosition
             
             laneEntity.addChild(laneModel)
             print("Lane entity created: \(type) at index \(index) using properties from ModelCatalog")
@@ -83,6 +89,7 @@ enum EntityFactory {
         // Apply scale and rotation from properties
         obstacleEntity.scale = properties.scale
         obstacleEntity.orientation = properties.rotation
+        obstacleEntity.position = properties.offset // Apply offset
         obstacleEntity.generateCollisionShapes(recursive: true)
         
         let direction: SIMD3<Float> = (laneIndex % 2 == 0) ? Constants.leftDirection : Constants.rightDirection // Alternate direction
