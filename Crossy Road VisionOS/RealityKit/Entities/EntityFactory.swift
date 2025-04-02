@@ -1,6 +1,7 @@
 // Functions to create player, obstacles, lanes
 import RealityKit
 import Foundation
+import SwiftUI // Keep for potential future color use or if Constants uses it
 
 @MainActor // Ensure functions run on the main actor if they modify the scene graph directly
 enum EntityFactory {
@@ -8,11 +9,11 @@ enum EntityFactory {
     static func createPlayerEntity() async throws -> ModelEntity {
         let playerEntity = try await ModelEntity(named: Constants.playerModelName)
         playerEntity.name = "Player"
+        playerEntity.scale = SIMD3<Float>(repeating: Constants.playerScale)
         playerEntity.generateCollisionShapes(recursive: true) // Generate collision
         playerEntity.components.set(InputTargetComponent()) // Allow gestures to target it
         playerEntity.components.set(PlayerComponent()) // Add player logic component
         playerEntity.transform.translation = Constants.playerStartPosition // Set initial position
-        playerEntity.transform.scale = Constants.playerScale // Set scale
 
         print("Player entity created")
         return playerEntity
@@ -34,8 +35,7 @@ enum EntityFactory {
         do {
             let laneModel = try await ModelEntity(named: modelName)
             laneModel.name = "LaneModel_\(index)"
-            // No collision needed for the lane itself usually, unless it's a trigger
-            laneModel.transform.scale = Constants.laneScale
+            laneModel.scale = SIMD3<Float>(repeating: Constants.laneScale)
             laneEntity.addChild(laneModel)
 
             // Position will be set by GameManager when placing the lane
@@ -69,10 +69,10 @@ enum EntityFactory {
 
         let obstacleEntity = try await ModelEntity(named: modelName)
         obstacleEntity.name = "\(type)_\(UUID().uuidString)" // Unique name
+        obstacleEntity.scale = SIMD3<Float>(repeating: Constants.obstacleScale)
         obstacleEntity.generateCollisionShapes(recursive: true)
         // Obstacles usually don't need InputTargetComponent unless you want to tap them
         obstacleEntity.components.set(ObstacleComponent(type: type, speed: speed, direction: direction))
-        obstacleEntity.transform.scale = Constants.obstacleScale // Adjust scale as needed
 
         print("Obstacle entity created: \(type)")
         return obstacleEntity

@@ -222,14 +222,14 @@ class GameManager: ObservableObject {
          do {
              let laneEntity = try await EntityFactory.createLaneEntity(type: laneType, index: nextLaneIndex)
 
-             // Position the lane
-             let zPosition = Constants.playerStartPosition.z - (Float(nextLaneIndex) * Constants.laneWidth)
-             laneEntity.position = [0, 0, zPosition] // Centered on X for now
-             laneEntity.transform.scale = Constants.laneScale
+             // Position the lane is handled inside the factory now, but we still need to add it
+             // let zPosition = Constants.playerStartPosition.z - (Float(nextLaneIndex) * Constants.laneWidth)
+             // laneEntity.position = [0, 0, zPosition] // Position set in factory
+             // laneEntity.transform.scale = Constants.laneScale // REMOVED: Scale set in factory
 
              root.addChild(laneEntity)
              activeLanes.append(laneEntity)
-             print("GameManager: Added \(laneType) lane at index \(nextLaneIndex), positionZ: \(zPosition)")
+             print("GameManager: Added \(laneType) lane at index \(nextLaneIndex), positionZ: \(laneEntity.position.z)") // Read position from entity
 
              nextLaneIndex += 1
 
