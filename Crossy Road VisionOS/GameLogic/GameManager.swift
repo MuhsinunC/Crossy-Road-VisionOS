@@ -270,24 +270,20 @@ class GameManager: ObservableObject {
 
         var targetPosition = player.position(relativeTo: gameWorldEntity) // Move relative to game world
         let moveDistance = Constants.laneWidth // Qualify constant
-        let rotationAngle: Float = .pi // 180 degrees for backward
 
         switch direction {
         case .forward:
             targetPosition.z -= moveDistance
-            player.orientation = simd_quatf(angle: 0, axis: [0, 1, 0]) // Face forward
         case .backward:
              targetPosition.z += moveDistance
-             player.orientation = simd_quatf(angle: rotationAngle, axis: [0, 1, 0]) // Face backward
-       // case .left: // TODO
-       //     targetPosition.x -= moveDistance
-       // case .right: // TODO
-        //    targetPosition.x += moveDistance
+        // case .left: // TODO
+        //     targetPosition.x -= moveDistance
+        // case .right: // TODO
         }
         
         print("GameManager: Moving player from \(player.position(relativeTo: gameWorldEntity)) to \(targetPosition)")
 
-        // Animate the movement
+        // Animate the movement - ONLY change translation
         var transform = player.transform
         transform.translation = targetPosition
         // Qualify constant
