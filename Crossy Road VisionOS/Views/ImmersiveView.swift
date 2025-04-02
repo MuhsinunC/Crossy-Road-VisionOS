@@ -1,7 +1,8 @@
-# The main RealityView for the game 
+// The main RealityView for the game 
 
 import SwiftUI
 import RealityKit
+import RealityKitContent
 import ARKit // Import ARKit for session and plane detection
 
 struct ImmersiveView: View {
@@ -88,4 +89,9 @@ struct ImmersiveView: View {
         // rootEntity.addChild(basePlatform)
         print("Initial game scene setup complete.")
     }
-} 
+}
+
+#Preview(immersionStyle: .mixed) {
+    ImmersiveView()
+        .environment(AppModel())
+}
