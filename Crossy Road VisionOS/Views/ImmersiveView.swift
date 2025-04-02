@@ -21,8 +21,9 @@ struct ImmersiveView: View {
             
             // --- Create Game World Anchor & Entity ---
             // Create a world-anchored entity at a fixed position
-            // (e.g., 1m in front, 0.5m down from world origin)
-            let worldAnchorPosition: SIMD3<Float> = [0, -0.5, -1.0] // Define position separately
+            // (e.g., 1.5m in front, 0.2m down from world origin)
+            // let worldAnchorPosition: SIMD3<Float> = [0, -0.2, -1.5] // Adjusted position
+            let worldAnchorPosition: SIMD3<Float> = [0, 0, -1.5] // 1.5m away, level with origin
             let worldAnchor = AnchorEntity(world: worldAnchorPosition) // Use explicit initializer
             content.add(worldAnchor)
             
