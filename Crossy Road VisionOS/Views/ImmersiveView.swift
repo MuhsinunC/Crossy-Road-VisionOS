@@ -4,54 +4,66 @@ import SwiftUI
 import RealityKit
 import RealityKitContent
 import ARKit // Import ARKit for session and plane detection
+// import Combine // No longer needed here
 
 struct ImmersiveView: View {
-    @ObservedObject var gameManager: GameManager // Use the shared game manager
+    @ObservedObject var gameManager: GameManager
+    // Remove state flags - no longer needed for update logic
+    // @State private var gameWorldEntity = Entity() 
+    // @State private var initialAnchorTransformSet = false
 
-    // Remove ARKit Session and Data Providers
-    // @State private var session = ARKitSession()
-    // @State private var planeData = PlaneDetectionProvider(alignments: [.horizontal]) // Detect horizontal planes
-
-    // Root entity is now the table anchor directly managed by RealityView
-    // @State private var tableAnchor: AnchorEntity?
+    // Remove table anchor target definition
+    // private let tableAnchorTarget = AnchorEntity(...)
 
     var body: some View {
         RealityView { content in
-            // Initial Scene Setup (runs once)
             print("RealityView make running...")
+            
+            // --- Create Game World Anchor & Entity ---
+            // Create a world-anchored entity at a fixed position
+            // (e.g., 1m in front, 0.5m down from world origin)
+            let worldAnchorPosition: SIMD3<Float> = [0, -0.5, -1.0] // Define position separately
+            let worldAnchor = AnchorEntity(world: worldAnchorPosition) // Use explicit initializer
+            content.add(worldAnchor)
+            
+            // Create the game world entity that holds all game elements
+            let gameWorldEntity = Entity()
+            worldAnchor.addChild(gameWorldEntity) // Add game world as child of the anchor
+            
+            // Apply a small Y offset to the game world itself if needed (relative to anchor)
+            gameWorldEntity.position.y = Constants.gameTableYOffset 
+            // --- Game world is now anchored relative to world origin ---
 
-            // Create an anchor that automatically finds a horizontal table plane
-            let tableAnchor = AnchorEntity(
-                .plane(.horizontal, classification: .table, minimumBounds: [Constants.minTableSize, Constants.minTableSize])
-            )
-            content.add(tableAnchor)
+            // --- Apply Initial Head Orientation --- 
+            // Use a temporary head anchor to get orientation relative to the world anchor
+            let headAnchor = AnchorEntity(.head)
+            content.add(headAnchor)
+            if let headParent = headAnchor.parent { // headParent is the RealityView content root
+                 // Convert head pose into the world anchor's coordinate space
+                let headTransformInWorldAnchorSpace = worldAnchor.convert(transform: headAnchor.transform, from: headParent)
+                // Get forward direction from the head pose relative to the world anchor
+                let cameraForward = headTransformInWorldAnchorSpace.matrix.columns.2 
+                let forwardOnPlane = normalize(SIMD3<Float>(cameraForward.x, 0, cameraForward.z)) // Project onto anchor's horizontal plane
+                let targetRotation = simd_quatf(from: SIMD3<Float>(0, 0, -1), to: forwardOnPlane)
+                // Apply orientation rotation TO THE GAME WORLD ENTITY (child of anchor)
+                gameWorldEntity.orientation = targetRotation 
+                print("ImmersiveView make: Applied initial head orientation to game world.")
+            } else {
+                print("ImmersiveView make: Warning - Could not get head parent for orientation.")
+            }
+            content.remove(headAnchor) // Remove temporary anchor
+            // ------------------------------------
 
-            // Register systems if needed (do this once)
+            // Register systems
             MovementSystem.registerSystem()
 
-            // Setup game manager with the anchor RealityKit will manage
-            // No need for async setup related to plane finding here
-            gameManager.setupGame(rootEntity: tableAnchor)
-            // Consider triggering startGame from ContentView or based on gameManager state change
-            // Remove state change here, let startGame handle it
-
-            // Remove the Task that manually ran setup/ARSession
-            // Task { ... }
-
-        } update: { content in
-            // Update Scene (runs periodically if needed, often logic is in Components/Systems)
-            print("RealityView update running...")
-            // You might update SwiftUI overlays here based on gameManager state
-        }
-        .onDisappear {
-            // Stop AR session is no longer needed here
-            // session.stop()
-            gameManager.resetGame() // Clean up game state
-            print("ImmersiveView disappeared. Game reset.")
-        }
+            // Setup game manager with the game world entity
+            gameManager.setupGame(rootEntity: gameWorldEntity)
+            
+        } // REMOVE update closure entirely
+        
         // --- Input Handling ---
         .gesture(SpatialTapGesture().targetedToAnyEntity().onEnded { value in
-            // Handle tap events on entities
             gameManager.handleTap(on: value.entity)
         })
     }

@@ -11,7 +11,7 @@ class GameManager: ObservableObject {
     @Published var currentGameState: GameState = .setup
     @Published var score: Int = 0
 
-    private var rootEntity: Entity? // The main anchor on the table
+    private var rootEntity: Entity? // The intermediate game world entity
     private var playerEntity: ModelEntity?
 
     // Level Generation state
@@ -29,30 +29,21 @@ class GameManager: ObservableObject {
 
     // --- Game Lifecycle ---
 
-    // Simplify setup: The rootEntity is assumed to be the plane anchor provided by RealityView
+    // Revert setup signature
     func setupGame(rootEntity: Entity) {
          print("GameManager: Setting up game with provided root entity...")
          self.rootEntity = rootEntity
-         self.currentGameState = .ready // Set state to ready since anchor is provided
+         self.currentGameState = .ready
          self.score = 0
          self.nextLaneIndex = 0
          self.activeLanes.removeAll()
          self.playerEntity = nil
-         // Remove ARKit related resets
-         // self.tableAnchorFound = false
-         // self.planeAnchorID = nil
          stopObstacleSpawning() // Ensure timer is stopped
-
-         // Optional pre-loading remains the same
-         // _ = try? await EntityFactory.createPlayerEntity()
-         // _ = try? await EntityFactory.createLaneEntity(type: .grass, index: 0)
-         // _ = try? await EntityFactory.createObstacleEntity(type: .car, laneIndex: 1)
      }
 
-
     func startGame() async {
-        // Ensure we are in a state where starting is valid (ready or maybe gameOver)
-        guard let rootEntity = self.rootEntity, (currentGameState == .ready || currentGameState == .gameOver) else {
+        // Revert guard condition
+        guard let root = self.rootEntity, (currentGameState == .ready || currentGameState == .gameOver) else {
             print("GameManager: Cannot start game in state \(currentGameState)")
             return
         }
@@ -68,14 +59,13 @@ class GameManager: ObservableObject {
              playerEntity = nil
         }
 
-        // Set state to playing *before* async operations if possible,
-        // or handle potential errors that prevent playing state
+        // Set state to playing
         currentGameState = .playing
 
         // Create and place the player
         do {
             playerEntity = try await EntityFactory.createPlayerEntity()
-            rootEntity.addChild(playerEntity!)
+            root.addChild(playerEntity!)
             print("GameManager: Player placed.")
         } catch {
             print("GameManager: Failed to create player entity: \(error)")
@@ -88,9 +78,9 @@ class GameManager: ObservableObject {
             await generateNextLane()
         }
 
-        // Start game loops (like obstacle spawning)
+        // Start game loops
         startObstacleSpawning()
-        print("GameManager: Game started successfully.") // Added confirmation log
+        print("GameManager: Game started successfully.")
     }
 
     func resetGame() {
