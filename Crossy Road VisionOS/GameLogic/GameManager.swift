@@ -22,26 +22,28 @@ class GameManager: ObservableObject {
     // Timers or mechanisms for spawning
     private var obstacleSpawnTimer: Timer? // Example timer
 
-    // ARKit state
-    private var tableAnchorFound = false
-    private var planeAnchorID: UUID?
+    // Remove ARKit state
+    // private var tableAnchorFound = false
+    // private var planeAnchorID: UUID?
 
 
     // --- Game Lifecycle ---
 
-    func setupGame(rootEntity: Entity) async {
-         print("GameManager: Setting up game...")
+    // Simplify setup: The rootEntity is assumed to be the plane anchor provided by RealityView
+    func setupGame(rootEntity: Entity) {
+         print("GameManager: Setting up game with provided root entity...")
          self.rootEntity = rootEntity
-         self.currentGameState = .setup
+         self.currentGameState = .setup // Start as setup, ImmersiveView will set to .ready
          self.score = 0
          self.nextLaneIndex = 0
          self.activeLanes.removeAll()
          self.playerEntity = nil
-         self.tableAnchorFound = false // Reset plane finding state
-         self.planeAnchorID = nil
+         // Remove ARKit related resets
+         // self.tableAnchorFound = false
+         // self.planeAnchorID = nil
          stopObstacleSpawning() // Ensure timer is stopped
 
-         // Pre-load initial assets if desired (can improve initial spawn time)
+         // Optional pre-loading remains the same
          // _ = try? await EntityFactory.createPlayerEntity()
          // _ = try? await EntityFactory.createLaneEntity(type: .grass, index: 0)
          // _ = try? await EntityFactory.createObstacleEntity(type: .car, laneIndex: 1)
@@ -102,8 +104,9 @@ class GameManager: ObservableObject {
         score = 0
         nextLaneIndex = 0
         currentGameState = .setup // Go back to setup, waiting for plane
-        tableAnchorFound = false
-        planeAnchorID = nil
+        // Remove ARKit related resets
+        // self.tableAnchorFound = false
+        // self.planeAnchorID = nil
         rootEntity = nil // Clear root reference until ImmersiveView provides it again
     }
 
@@ -113,81 +116,6 @@ class GameManager: ObservableObject {
         stopObstacleSpawning()
         // Maybe show a game over message or effect
     }
-
-    // --- ARKit Plane Handling ---
-     func handlePlaneAnchorUpdate(_ update: AnchorUpdate<PlaneAnchor>, session: ARKitSession) async {
-         // Only anchor to the first good table found
-         guard !tableAnchorFound else { return }
-
-         let planeAnchor = update.anchor
-
-         // Check if the plane meets criteria (e.g., table classification, minimum size)
-         guard planeAnchor.alignment == .horizontal,
-               planeAnchor.classification == .table, // Make sure it's classified as a table
-               planeAnchor.geometry.minimumExtent(comparingAxes: .xy) > Constants.minTableSize // Ensure it's big enough
-         else {
-             // If an anchor was removed that we were tracking, reset
-             if update.event == .removed && planeAnchor.id == self.planeAnchorID {
-                 print("GameManager: Tracked plane anchor removed.")
-                 await handleLostTableAnchor()
-             }
-             return
-         }
-
-
-         if update.event == .added || update.event == .updated {
-             print("GameManager: Suitable table plane found/updated: \(planeAnchor.id)")
-             tableAnchorFound = true
-             self.planeAnchorID = planeAnchor.id
-
-
-             // Update the rootEntity's anchor to track this specific plane
-             if let root = self.rootEntity as? AnchorEntity {
-                 // Create a new anchor tracking the specific plane
-                 let newAnchor = AnchorEntity(anchor: planeAnchor)
-
-                 // Copy children from the old temporary anchor (if any) to the new one
-                 // Note: This simple copy might not be robust if complex setup happened before anchoring
-                 let children = root.children.map { $0 } // Copy the collection
-                 children.forEach { $0.move(toParent: newAnchor, preservingWorldTransform: true) }
-
-
-                 // Replace the old rootEntity reference and update the scene
-                 // This needs careful handling with RealityView's content management.
-                 // A better approach might be to have a placeholder Entity under the initial world anchor,
-                 // and move *that* placeholder to the new plane anchor when found.
-
-                 // Simpler for now: Just signal that we are ready
-                 print("GameManager: Anchored to table. Ready to place game.")
-                 if currentGameState == .setup { // Only transition if we were waiting
-                     self.currentGameState = .ready // Now ready to start via button press
-                     // Optionally automatically start: await startGame()
-                 }
-
-
-                 // We found our table, stop processing further updates for *new* tables
-                 // (We might still want updates for the *same* table if its geometry changes significantly)
-                 // session.stop() // Don't stop the whole session, just ignore new planes logic
-
-
-             } else {
-                 print("GameManager: Root entity is not an AnchorEntity or not found.")
-             }
-         }
-     }
-
-
-     func handleLostTableAnchor() async {
-         print("GameManager: Lost table anchor!")
-         // Handle the case where the table is no longer detected
-         tableAnchorFound = false
-         planeAnchorID = nil
-         currentGameState = .setup // Or a specific "paused/relocalizing" state
-         stopObstacleSpawning()
-         // Potentially hide or remove game elements until a new anchor is found
-         rootEntity?.children.removeAll() // Example: Clear the scene
-         // Inform the user they need to find a table again
-     }
 
     // --- Input Handling ---
 
@@ -238,10 +166,8 @@ class GameManager: ObservableObject {
         let targetTransform = Transform(scale: player.transform.scale, rotation: player.transform.rotation, translation: targetPosition)
         player.move(to: targetTransform, relativeTo: player.parent, duration: Constants.playerMoveDuration, timingFunction: .easeInOut)
 
-        // TODO: Add collision check *after* movement starts or finishes
-        // This might involve a slight delay or checking during the animation.
-        // For simplicity, a check could happen immediately based on targetPosition.
-        checkCollision(at: targetPosition)
+        // Remove manual collision check - Will be replaced by Collision Events
+        // checkCollision(at: targetPosition)
     }
 
     enum PlayerMovementDirection {
@@ -370,6 +296,8 @@ class GameManager: ObservableObject {
 
     // --- Collision Detection ---
 
+    // Remove manual Collision Detection function
+    /*
      // Basic placeholder - needs proper implementation using RealityKit physics/collision events
      func checkCollision(at position: SIMD3<Float>) {
          guard let root = rootEntity else { return }
@@ -378,9 +306,16 @@ class GameManager: ObservableObject {
          // This is VERY basic. Proper collision needs CollisionComponent and event subscriptions or queries.
          // Example: Query entities near the player's new position
 
-         let queryBounds = BoundingBox(center: position, extents: [Constants.laneWidth * 0.8, 0.5, Constants.laneWidth * 0.8]) // Small box around target
+         // Calculate min/max for BoundingBox initializer
+         let halfExtents = SIMD3<Float>(Constants.laneWidth * 0.8 / 2, 0.5 / 2, Constants.laneWidth * 0.8 / 2)
+         let minPoint = position - halfExtents
+         let maxPoint = position + halfExtents
+         let queryBounds = BoundingBox(min: minPoint, max: maxPoint) // Small box around target
 
-         let nearbyEntities = root.scene?.performQuery(EntityQuery(bounds: queryBounds)) ?? []
+         // Use EntityQuery(where:) and perform query safely
+         guard let scene = root.scene else { return }
+         // Use scene.entities(matching: .overlapping(queryBounds))
+         let nearbyEntities = scene.entities(matching: .overlapping(queryBounds))
 
          var onSafeSurface = false
          var hitObstacle = false
@@ -431,8 +366,9 @@ class GameManager: ObservableObject {
               // Player is safe on grass, log, or empty track
          }
      }
+     */
 
-     // Placeholder helper functions for collision
+     // Placeholder helper functions for collision (Now unused)
      private func isPositionOnLog(position: SIMD3<Float>, waterLaneIndex: Int) -> Bool {
          // TODO: Query for log entities specifically on `waterLaneIndex` near `position`
          return false // Placeholder

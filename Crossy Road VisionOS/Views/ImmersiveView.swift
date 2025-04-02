@@ -8,53 +8,47 @@ import ARKit // Import ARKit for session and plane detection
 struct ImmersiveView: View {
     @ObservedObject var gameManager: GameManager // Use the shared game manager
 
-    // ARKit Session and Data Providers
-    @State private var session = ARKitSession()
-    @State private var planeData = PlaneDetectionProvider(alignments: [.horizontal]) // Detect horizontal planes
+    // Remove ARKit Session and Data Providers
+    // @State private var session = ARKitSession()
+    // @State private var planeData = PlaneDetectionProvider(alignments: [.horizontal]) // Detect horizontal planes
 
-    // Root entity anchored to the real world
-    @State private var tableAnchor: AnchorEntity?
+    // Root entity is now the table anchor directly managed by RealityView
+    // @State private var tableAnchor: AnchorEntity?
 
     var body: some View {
         RealityView { content in
             // Initial Scene Setup (runs once)
             print("RealityView make running...")
 
-            // Create a root anchor entity for the table (will be updated)
-            let rootEntity = AnchorEntity(.world(transform: .identity)) // Temporary world anchor
-            content.add(rootEntity)
+            // Create an anchor that automatically finds a horizontal table plane
+            let tableAnchor = AnchorEntity(
+                .plane(.horizontal, classification: .table, minimumBounds: [Constants.minTableSize, Constants.minTableSize])
+            )
+            content.add(tableAnchor)
 
-            // Create the game manager entity (or use the class directly)
-            // If using ECS systems, register them here:
-            // MovementSystem.registerSystem()
+            // Register systems if needed (do this once)
+            MovementSystem.registerSystem()
 
-            // Initial game setup call (can be async)
-            Task {
-                await setupGameScene(content: content, rootEntity: rootEntity)
-                await gameManager.setupGame(rootEntity: rootEntity) // Pass root to manager
-                await runARSession() // Start looking for planes AFTER initial setup
-            }
+            // Setup game manager with the anchor RealityKit will manage
+            // No need for async setup related to plane finding here
+            gameManager.setupGame(rootEntity: tableAnchor)
+            // Consider triggering startGame from ContentView or based on gameManager state change
+            // For simplicity now, let's assume setup implies ready for button press
+            gameManager.currentGameState = .ready // Update state after setup
+
+            // Remove the Task that manually ran setup/ARSession
+            // Task { ... }
 
         } update: { content in
             // Update Scene (runs periodically if needed, often logic is in Components/Systems)
             print("RealityView update running...")
             // You might update SwiftUI overlays here based on gameManager state
         }
-        .task {
-            // Task runs when the view appears
-            // Handled in make's Task now to ensure scene is ready
-        }
-        .task(priority: .low) {
-           // Monitor plane detection updates
-            for await update in planeData.anchorUpdates {
-                 await gameManager.handlePlaneAnchorUpdate(update, session: session)
-            }
-        }
         .onDisappear {
-            // Stop AR session when view disappears
-            session.stop()
+            // Stop AR session is no longer needed here
+            // session.stop()
             gameManager.resetGame() // Clean up game state
-            print("AR Session Stopped.")
+            print("ImmersiveView disappeared. Game reset.")
         }
         // --- Input Handling ---
         .gesture(SpatialTapGesture().targetedToAnyEntity().onEnded { value in
@@ -63,35 +57,13 @@ struct ImmersiveView: View {
         })
     }
 
-    // Function to set up the AR Session
-    private func runARSession() async {
-        print("Attempting to run AR Session...")
-        do {
-            // Request authorization (important!)
-             let authStatus = await session.requestAuthorization(for: [.worldSensing])
-             guard authStatus[.worldSensing] == .authorized else {
-                 print("ARKit World Sensing authorization denied.")
-                 // Handle lack of authorization
-                 return
-             }
-            // Run the session with plane detection
-            try await session.run([planeData])
-            print("AR Session running with plane detection.")
-        } catch {
-            print("Failed to run AR session: \(error)")
-        }
-    }
+    // Remove the manual AR Session functions
+    // private func runARSession() async { ... }
+    // private func setupGameScene(rootEntity: Entity) async { ... } // Simple setup done in make
 
-    // Function for initial scene elements (like loading static assets)
-    private func setupGameScene(content: RealityViewContent, rootEntity: Entity) async {
-        // Example: Load a simple non-moving element if needed
-        // let basePlatform = try? await ModelEntity(named: "platform.usdz")
-        // rootEntity.addChild(basePlatform)
-        print("Initial game scene setup complete.")
-    }
 }
 
 #Preview(immersionStyle: .mixed) {
-    ImmersiveView()
-        .environment(AppModel())
+    // Create a GameManager instance specifically for the preview
+    ImmersiveView(gameManager: GameManager())
 }
