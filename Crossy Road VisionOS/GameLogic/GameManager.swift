@@ -1,4 +1,4 @@
-# Manages game state, score, level generation 
+// Manages game state, score, level generation 
 
 import SwiftUI // For ObservableObject
 import RealityKit

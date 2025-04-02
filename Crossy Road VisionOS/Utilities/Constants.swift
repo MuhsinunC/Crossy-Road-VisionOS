@@ -1,4 +1,4 @@
-# Game constants (speed, sizes, etc.)
+// Game constants (speed, sizes, etc.)
 import Foundation
 import RealityKit // For SIMD types if needed
 

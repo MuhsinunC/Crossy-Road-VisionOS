@@ -1,4 +1,4 @@
-# System to update obstacle positions
+// System to update obstacle positions
 import RealityKit
 
 // A system processes entities with specific components each frame.

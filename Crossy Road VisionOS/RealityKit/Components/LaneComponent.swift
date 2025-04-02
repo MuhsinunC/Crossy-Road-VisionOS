@@ -1,4 +1,4 @@
-# Identifies a lane type
+// Identifies a lane type
 import RealityKit
 
 struct LaneComponent: Component, Codable {

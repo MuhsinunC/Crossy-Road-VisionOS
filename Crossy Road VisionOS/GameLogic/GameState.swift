@@ -1,4 +1,4 @@
-# Enum for different game states
+// Enum for different game states
 import Foundation
 
 enum GameState {

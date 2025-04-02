@@ -1,4 +1,4 @@
-# Logic specific to the player character
+// Logic specific to the player character
 import RealityKit
 import Foundation // Needed for UUID
 

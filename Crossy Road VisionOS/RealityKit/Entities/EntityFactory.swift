@@ -1,4 +1,4 @@
-# Functions to create player, obstacles, lanes
+// Functions to create player, obstacles, lanes
 import RealityKit
 import Foundation
 

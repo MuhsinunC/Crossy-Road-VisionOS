@@ -1,4 +1,4 @@
-# Logic for moving obstacles (cars, logs)
+// Logic for moving obstacles (cars, logs)
 import RealityKit
 import simd // For vector types like SIMD3
 
