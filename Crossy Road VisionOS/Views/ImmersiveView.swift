@@ -33,8 +33,7 @@ struct ImmersiveView: View {
             // No need for async setup related to plane finding here
             gameManager.setupGame(rootEntity: tableAnchor)
             // Consider triggering startGame from ContentView or based on gameManager state change
-            // For simplicity now, let's assume setup implies ready for button press
-            gameManager.currentGameState = .ready // Update state after setup
+            // Remove state change here, let startGame handle it
 
             // Remove the Task that manually ran setup/ARSession
             // Task { ... }

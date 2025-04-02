@@ -33,7 +33,7 @@ class GameManager: ObservableObject {
     func setupGame(rootEntity: Entity) {
          print("GameManager: Setting up game with provided root entity...")
          self.rootEntity = rootEntity
-         self.currentGameState = .setup // Start as setup, ImmersiveView will set to .ready
+         self.currentGameState = .ready // Set state to ready since anchor is provided
          self.score = 0
          self.nextLaneIndex = 0
          self.activeLanes.removeAll()
@@ -51,7 +51,8 @@ class GameManager: ObservableObject {
 
 
     func startGame() async {
-        guard let rootEntity = self.rootEntity, currentGameState == .ready || currentGameState == .gameOver else {
+        // Ensure we are in a state where starting is valid (ready or maybe gameOver)
+        guard let rootEntity = self.rootEntity, (currentGameState == .ready || currentGameState == .gameOver) else {
             print("GameManager: Cannot start game in state \(currentGameState)")
             return
         }
@@ -67,7 +68,8 @@ class GameManager: ObservableObject {
              playerEntity = nil
         }
 
-
+        // Set state to playing *before* async operations if possible,
+        // or handle potential errors that prevent playing state
         currentGameState = .playing
 
         // Create and place the player
@@ -88,6 +90,7 @@ class GameManager: ObservableObject {
 
         // Start game loops (like obstacle spawning)
         startObstacleSpawning()
+        print("GameManager: Game started successfully.") // Added confirmation log
     }
 
     func resetGame() {
@@ -103,7 +106,7 @@ class GameManager: ObservableObject {
         // Reset state variables
         score = 0
         nextLaneIndex = 0
-        currentGameState = .setup // Go back to setup, waiting for plane
+        currentGameState = .setup // Reset back to setup, as the anchor might be gone
         // Remove ARKit related resets
         // self.tableAnchorFound = false
         // self.planeAnchorID = nil
