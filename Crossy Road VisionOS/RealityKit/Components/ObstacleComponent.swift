@@ -3,11 +3,7 @@ import RealityKit
 import simd // For vector types like SIMD3
 
 struct ObstacleComponent: Component, Codable {
-    enum ObstacleType: Codable {
-        case car, log, train // Add more as needed
-    }
-
-    var type: ObstacleType
+    var type: ObstacleType // Uses the global ObstacleType now
     var speed: Float // Units per second
     var direction: SIMD3<Float> // Movement direction relative to the lane
 

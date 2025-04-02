@@ -31,6 +31,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Utilities/Constants.swift,
 			);
 			target = CEADB3992D9CAEC90030A83B /* Crossy Road VisionOS */;
 		};

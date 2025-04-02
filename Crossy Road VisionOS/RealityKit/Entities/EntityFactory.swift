@@ -13,13 +13,14 @@ enum EntityFactory {
         playerEntity.generateCollisionShapes(recursive: true) // Generate collision
         playerEntity.components.set(InputTargetComponent()) // Allow gestures to target it
         playerEntity.components.set(PlayerComponent()) // Add player logic component
-        playerEntity.transform.translation = Constants.playerStartPosition // Set initial position
+        // Position is now set by GameManager
+        // playerEntity.transform.translation = Constants.playerStartPosition 
 
         print("Player entity created")
         return playerEntity
     }
 
-    static func createLaneEntity(type: LaneComponent.LaneType, index: Int) async throws -> Entity {
+    static func createLaneEntity(type: LaneType, index: Int) async throws -> Entity {
         let laneEntity = Entity() // Use a base entity to hold the model and component
         laneEntity.name = "Lane_\(index)"
         laneEntity.components.set(LaneComponent(type: type, index: index))
@@ -29,16 +30,21 @@ enum EntityFactory {
         case .grass: modelName = Constants.grassLaneModelName
         case .road: modelName = Constants.roadLaneModelName
         case .water: modelName = Constants.waterLaneModelName
-        case .trainTrack: modelName = Constants.trainTrackLaneModelName // Assuming you have this model
         }
 
         do {
             let laneModel = try await ModelEntity(named: modelName)
             laneModel.name = "LaneModel_\(index)"
+            
+            // Apply the scale
             laneModel.scale = SIMD3<Float>(repeating: Constants.laneScale)
+            
+            // Position the model correctly within the lane entity
+            let centerOffset = -Float(Constants.laneSegments / 2) * Constants.laneSegmentWidth + Constants.laneSegmentWidth / 2
+            laneModel.position.x = centerOffset
+            laneModel.position.z = -Float(index) * Constants.laneWidth // Position based on index
+            
             laneEntity.addChild(laneModel)
-
-            // Position will be set by GameManager when placing the lane
             print("Lane entity created: \(type) at index \(index)")
 
         } catch {
@@ -46,24 +52,22 @@ enum EntityFactory {
              throw error // Re-throw error
         }
 
-
         return laneEntity
     }
 
-    static func createObstacleEntity(type: ObstacleComponent.ObstacleType, laneIndex: Int) async throws -> ModelEntity {
+    static func createObstacleEntity(type: ObstacleType, laneIndex: Int) async throws -> ModelEntity {
         let modelName: String
         var speed = Constants.defaultCarSpeed
         let direction: SIMD3<Float> = (laneIndex % 2 == 0) ? Constants.leftDirection : Constants.rightDirection // Alternate direction
 
         switch type {
         case .car:
-            // Maybe choose a random car model?
-            modelName = Constants.carModelName // Assume one for now
+            modelName = Constants.carModelName
         case .log:
             modelName = Constants.logModelName
             speed = Constants.defaultLogSpeed
         case .train:
-            modelName = Constants.trainModelName // Assuming model exists
+            modelName = Constants.trainModelName
             speed = Constants.defaultTrainSpeed
         }
 
@@ -71,7 +75,6 @@ enum EntityFactory {
         obstacleEntity.name = "\(type)_\(UUID().uuidString)" // Unique name
         obstacleEntity.scale = SIMD3<Float>(repeating: Constants.obstacleScale)
         obstacleEntity.generateCollisionShapes(recursive: true)
-        // Obstacles usually don't need InputTargetComponent unless you want to tap them
         obstacleEntity.components.set(ObstacleComponent(type: type, speed: speed, direction: direction))
 
         print("Obstacle entity created: \(type)")

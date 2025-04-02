@@ -6,76 +6,78 @@ import RealityKitContent
 import ARKit // Import ARKit for session and plane detection
 // import Combine // No longer needed here
 
-struct ImmersiveView: View {
-    @ObservedObject var gameManager: GameManager
-    // Remove state flags - no longer needed for update logic
-    // @State private var gameWorldEntity = Entity() 
-    // @State private var initialAnchorTransformSet = false
+// Helper class to manage ARKit session
+@MainActor
+class ARKitSessionManager: ObservableObject {
+    let session = ARKitSession()
+    let worldTracking = WorldTrackingProvider()
 
-    // Remove table anchor target definition
-    // private let tableAnchorTarget = AnchorEntity(...)
+    func runSession() async {
+        // Check permissions if necessary, omitted for brevity
+        // Ensure world tracking is supported
+        guard WorldTrackingProvider.isSupported else {
+            print("ARKitSessionManager: WorldTrackingProvider is not supported on this device.")
+            // Handle error appropriately - perhaps show an alert
+            return
+        }
 
-    var body: some View {
-        RealityView { content in
-            print("RealityView make running...")
-            
-            // --- Create Game World Anchor & Entity ---
-            // Create a world-anchored entity at a fixed position
-            // (e.g., 1.5m in front, 0.2m down from world origin)
-            // let worldAnchorPosition: SIMD3<Float> = [0, -0.2, -1.5] // Adjusted position
-            let worldAnchorPosition: SIMD3<Float> = [0, 0, -1.5] // 1.5m away, level with origin
-            let worldAnchor = AnchorEntity(world: worldAnchorPosition) // Use explicit initializer
-            content.add(worldAnchor)
-            
-            // Create the game world entity that holds all game elements
-            let gameWorldEntity = Entity()
-            worldAnchor.addChild(gameWorldEntity) // Add game world as child of the anchor
-            
-            // Apply a small Y offset to the game world itself if needed (relative to anchor)
-            gameWorldEntity.position.y = Constants.gameTableYOffset 
-            // --- Game world is now anchored relative to world origin ---
-
-            // --- Apply Initial Head Orientation --- 
-            // Use a temporary head anchor to get orientation relative to the world anchor
-            let headAnchor = AnchorEntity(.head)
-            content.add(headAnchor)
-            if let headParent = headAnchor.parent { // headParent is the RealityView content root
-                 // Convert head pose into the world anchor's coordinate space
-                let headTransformInWorldAnchorSpace = worldAnchor.convert(transform: headAnchor.transform, from: headParent)
-                // Get forward direction from the head pose relative to the world anchor
-                let cameraForward = headTransformInWorldAnchorSpace.matrix.columns.2 
-                let forwardOnPlane = normalize(SIMD3<Float>(cameraForward.x, 0, cameraForward.z)) // Project onto anchor's horizontal plane
-                let targetRotation = simd_quatf(from: SIMD3<Float>(0, 0, -1), to: forwardOnPlane)
-                // Apply orientation rotation TO THE GAME WORLD ENTITY (child of anchor)
-                gameWorldEntity.orientation = targetRotation 
-                print("ImmersiveView make: Applied initial head orientation to game world.")
-            } else {
-                print("ImmersiveView make: Warning - Could not get head parent for orientation.")
-            }
-            content.remove(headAnchor) // Remove temporary anchor
-            // ------------------------------------
-
-            // Register systems
-            MovementSystem.registerSystem()
-
-            // Setup game manager with the game world entity
-            gameManager.setupGame(rootEntity: gameWorldEntity)
-            
-        } // REMOVE update closure entirely
-        
-        // --- Input Handling ---
-        .gesture(SpatialTapGesture().targetedToAnyEntity().onEnded { value in
-            gameManager.handleTap(on: value.entity)
-        })
+        print("ARKitSessionManager: WorldTrackingProvider is supported. Running session.")
+        do {
+            try await session.run([worldTracking])
+            print("ARKitSessionManager: Session started successfully.")
+        } catch {
+            print("ARKitSessionManager: Error running ARKit session: \\(error)")
+            // Handle error appropriately
+        }
     }
 
-    // Remove the manual AR Session functions
-    // private func runARSession() async { ... }
-    // private func setupGameScene(rootEntity: Entity) async { ... } // Simple setup done in make
-
+     // Function to get the current device transform
+     func getDeviceTransform() -> simd_float4x4? {
+        guard let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else {
+            print("ARKitSessionManager: Failed to query device anchor.")
+            return nil
+        }
+        return deviceAnchor.originFromAnchorTransform
+    }
 }
 
+struct ImmersiveView: View {
+    @StateObject var gameManager = GameManager()
+    @StateObject var arkitSessionManager = ARKitSessionManager()
+    @State var rootEntity = Entity()
+
+    var body: some View {
+        // Explicitly capture gameManager for use in closures
+        let capturedGameManager = gameManager
+
+        RealityView { content in
+            print("ImmersiveView: RealityView make - Adding root entity.")
+            content.add(rootEntity)
+        }
+        .task {
+            print("ImmersiveView: Task starting ARKit session.")
+            await arkitSessionManager.runSession()
+            // Do NOT call setup here anymore
+        }
+        .onAppear {
+            print("ImmersiveView: onAppear - Calling GameManager setup.")
+            // Call setup using the captured reference
+            capturedGameManager.setup(rootEntity: rootEntity, worldTracking: arkitSessionManager.worldTracking)
+        }
+        .onDisappear {
+            print("ImmersiveView: onDisappear.")
+            // Call a cleanup method on gameManager using the captured reference
+            capturedGameManager.handleDisappear()
+        }
+        .gesture(SpatialTapGesture().targetedToAnyEntity().onEnded { value in
+             print("ImmersiveView: Spatial Tap detected.")
+             // Use the captured reference
+             capturedGameManager.handleTap(on: value.entity)
+         })
+    }
+}
+
+// Corrected Preview - ImmersiveView manages its own GameManager
 #Preview(immersionStyle: .mixed) {
-    // Create a GameManager instance specifically for the preview
-    ImmersiveView(gameManager: GameManager())
+    ImmersiveView()
 }

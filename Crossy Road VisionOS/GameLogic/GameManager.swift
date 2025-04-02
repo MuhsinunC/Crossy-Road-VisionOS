@@ -5,369 +5,352 @@ import RealityKit
 import ARKit // For ARAnchor types
 import Combine // For cancellables
 
+// Enum for different game states (MOVED TO TOP)
+enum GameState {
+    case menu
+    case playing
+    case gameOver
+}
+
 @MainActor // Ensure methods interacting with RealityKit run on main actor
 class GameManager: ObservableObject {
 
-    @Published var currentGameState: GameState = .setup
+    @Published var gameState: GameState = GameState.menu
     @Published var score: Int = 0
+    @Published var isImmersiveSpaceOpen: Bool = false // Track if the immersive space is open
 
-    private var rootEntity: Entity? // The intermediate game world entity
+    // Game world and entities
+    private var gameWorldEntity = Entity()
     private var playerEntity: ModelEntity?
+    private var activeLanes: [Int: Entity] = [:]
+    private var activeObstacles: Set<Entity> = Set()
+    private var laneIndexCounter = 0
+    private var cancellables = Set<AnyCancellable>()
 
-    // Level Generation state
-    private var activeLanes: [Entity] = [] // Keep track of current lanes
-    private var nextLaneIndex: Int = 0
-    private let maxVisibleLanes = 15 // How many lanes to keep loaded
+    // New properties for ARKit integration
+    private var worldTrackingProvider: WorldTrackingProvider? = nil
+    private var sceneRootEntity: Entity? = nil
+    private var isSetupComplete: Bool = false
+    private var dynamicWorldAnchor: AnchorEntity? = nil // To hold the dynamically placed anchor
 
-    // Timers or mechanisms for spawning
-    private var obstacleSpawnTimer: Timer? // Example timer
-
-    // Remove ARKit state
-    // private var tableAnchorFound = false
-    // private var planeAnchorID: UUID?
-
-
-    // --- Game Lifecycle ---
-
-    // Revert setup signature
-    func setupGame(rootEntity: Entity) {
-         print("GameManager: Setting up game with provided root entity...")
-         self.rootEntity = rootEntity
-         self.currentGameState = .ready
-         self.score = 0
-         self.nextLaneIndex = 0
-         self.activeLanes.removeAll()
-         self.playerEntity = nil
-         stopObstacleSpawning() // Ensure timer is stopped
-     }
-
-    func startGame() async {
-        // Revert guard condition
-        guard let root = self.rootEntity, (currentGameState == .ready || currentGameState == .gameOver) else {
-            print("GameManager: Cannot start game in state \(currentGameState)")
-            return
-        }
-        print("GameManager: Starting game...")
-
-        // Reset score only if starting from game over or ready
-        if currentGameState != .playing {
-             score = 0
-             nextLaneIndex = 0
-             activeLanes.forEach { $0.removeFromParent() } // Clear old lanes
-             activeLanes.removeAll()
-             playerEntity?.removeFromParent() // Remove old player
-             playerEntity = nil
-        }
-
-        // Set state to playing
-        currentGameState = .playing
-
-        // Create and place the player
-        do {
-            playerEntity = try await EntityFactory.createPlayerEntity()
-            root.addChild(playerEntity!)
-            print("GameManager: Player placed.")
-        } catch {
-            print("GameManager: Failed to create player entity: \(error)")
-            currentGameState = .gameOver // Or some error state
-            return
-        }
-
-        // Generate initial lanes
-        for i in 0..<maxVisibleLanes / 2 { // Generate some lanes ahead
-            await generateNextLane()
-        }
-
-        // Start game loops
-        startObstacleSpawning()
-        print("GameManager: Game started successfully.")
+    init() {
+        // Register systems - moved to setup to ensure RealityKit is ready
+        // MovementSystem.registerSystem()
     }
 
-    func resetGame() {
-        print("GameManager: Resetting game...")
-        stopObstacleSpawning()
-        // Remove all dynamic entities
-        activeLanes.forEach { $0.removeFromParent() }
-        activeLanes.removeAll()
-        playerEntity?.removeFromParent() // Remove player
-        playerEntity = nil
-        rootEntity?.children.removeAll() // Clear children from root, except maybe persistent ones
+    // Setup method called from ImmersiveView
+    func setup(rootEntity: Entity, worldTracking: WorldTrackingProvider) {
+        guard !isSetupComplete else {
+            print("GameManager: Setup already complete.")
+            return
+        }
+        print("GameManager: Setup running...")
+        self.sceneRootEntity = rootEntity
+        self.worldTrackingProvider = worldTracking
+        self.isImmersiveSpaceOpen = true
+        self.isSetupComplete = true
 
-        // Reset state variables
+        // Register systems now that we have a RealityKit context
+        MovementSystem.registerSystem()
+        print("GameManager: Setup complete. Systems registered.")
+    }
+
+    // Called when the ImmersiveView disappears
+    func handleDisappear() {
+        print("GameManager: Handling disappear.")
+        self.isImmersiveSpaceOpen = false
+        // Reset game state or perform other cleanup if needed
+        resetGame()
+        // Clear ARKit references
+        self.worldTrackingProvider = nil
+        self.sceneRootEntity = nil
+        self.dynamicWorldAnchor = nil
+        self.isSetupComplete = false
+    }
+
+    // Start the game
+    func startGame() {
+        print("GameManager: startGame called.")
+        guard isSetupComplete, let root = sceneRootEntity, let tracker = worldTrackingProvider else {
+            print("GameManager Error: Setup not complete or ARKit components missing. Cannot start game.")
+            gameState = .menu // Revert to menu if setup failed
+            return
+        }
+
+        guard gameState == .menu || gameState == .gameOver else {
+            print("GameManager: Game already in progress or starting.")
+            return
+        }
+
+        gameState = .playing
         score = 0
-        nextLaneIndex = 0
-        currentGameState = .setup // Reset back to setup, as the anchor might be gone
-        // Remove ARKit related resets
-        // self.tableAnchorFound = false
-        // self.planeAnchorID = nil
-        rootEntity = nil // Clear root reference until ImmersiveView provides it again
-    }
+        resetGameEntities()
 
-    func gameOver() {
-        print("GameManager: Game Over!")
-        currentGameState = .gameOver
-        stopObstacleSpawning()
-        // Maybe show a game over message or effect
-    }
-
-    // --- Input Handling ---
-
-    func handleTap(on entity: Entity) {
-        guard currentGameState == .playing, let player = playerEntity else { return }
-
-        print("GameManager: Tap detected on entity: \(entity.name)")
-
-        // Example: Move forward if tapping the player or ground just ahead?
-        if entity == player || entity.name.starts(with: "Lane") { // Adjust targeting logic
-            movePlayer(direction: .forward)
+        // --- Create Dynamic Anchor based on Head Pose ---
+        guard let deviceTransform = tracker.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform else {
+            print("GameManager Error: Could not get device transform. Cannot start game.")
+            gameState = .menu
+            return
         }
-        // Add logic for tapping left/right zones if you implement those
+
+        // --- RESTORED Anchor Offset Calculation --- 
+        // Calculate anchor position: 1.5m forward, 0.2m down from head
+        let forwardOffset = SIMD3<Float>(0, 0, -1.5) // -Z is forward in RealityKit
+        let downOffset = SIMD3<Float>(0, -0.2, 0)
+        // Apply offsets in the device's local coordinate space
+        var anchorTransform = deviceTransform
+        let localOffset = forwardOffset + downOffset
+        anchorTransform.columns.3.x += anchorTransform.columns.0.x * localOffset.x + anchorTransform.columns.1.x * localOffset.y + anchorTransform.columns.2.x * localOffset.z
+        anchorTransform.columns.3.y += anchorTransform.columns.0.y * localOffset.x + anchorTransform.columns.1.y * localOffset.y + anchorTransform.columns.2.y * localOffset.z
+        anchorTransform.columns.3.z += anchorTransform.columns.0.z * localOffset.x + anchorTransform.columns.1.z * localOffset.y + anchorTransform.columns.2.z * localOffset.z
+        // ---------------------------------------------------------------
+
+        // Create the anchor
+        let newAnchor = AnchorEntity(world: anchorTransform)
+        newAnchor.name = "DynamicWorldAnchor"
+        root.addChild(newAnchor) // Add anchor to the scene's root
+        self.dynamicWorldAnchor = newAnchor // Store reference
+
+        // --- Game World Entity Setup ---
+        // Create the main entity to hold all game elements
+        gameWorldEntity = Entity()
+        gameWorldEntity.name = "GameWorld"
+        print("GameManager: gameWorldEntity created. Initial Scale: \(gameWorldEntity.scale)")
+        
+        // Apply the constant Y offset if needed (relative to the new anchor)
+        gameWorldEntity.position.y = Constants.gameTableYOffset // Qualify constant
+        newAnchor.addChild(gameWorldEntity) // IMPORTANT: Add game world as child of the NEW anchor
+        
+        print("GameManager: gameWorldEntity added to anchor. Scale now: \(gameWorldEntity.scale)")
+        print("GameManager: Anchor scale: \(newAnchor.scale)")
+        print("GameManager: Dynamic world anchor created and gameWorldEntity added as child.")
+        // -------------------------------
+
+        // Create the player entity
+        // Removed incorrect @MainActor attribute - Task inherits context from @MainActor func
+        Task {
+            do {
+                playerEntity = try await EntityFactory.createPlayerEntity()
+                if let player = playerEntity {
+                    player.name = "Player"
+                    // Qualify constants
+                    player.position = SIMD3<Float>(0, Constants.playerStartYOffset, Float(Constants.lanesToGenerate - 1) * Constants.laneWidth / 2.0) 
+                    gameWorldEntity.addChild(player) // Add player to gameWorldEntity
+                    print("GameManager: Player added. Scale from factory: \(player.scale)") // Log scale after adding
+                    
+                } else {
+                    throw NSError(domain: "GameManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Player entity creation returned nil"])
+                }
+            } catch {
+                print("GameManager Error: Failed to create player entity: \(error). Setting state to gameOver.")
+                resetGameEntities() // Clean up anything partially created
+                gameState = .gameOver
+                return // Stop further setup
+            }
+            
+            // Generate initial lanes
+            print("GameManager: Generating initial lanes...")
+            for i in 0..<Constants.lanesToGenerate { // Qualify constant
+                generateNextLane()
+            }
+            print("GameManager: Initial lanes generated.")
+        }
     }
 
-    // --- Player Movement ---
+    // Reset game entities and state
+    func resetGame() {
+        print("GameManager: resetGame called.")
+        gameState = .menu
+        score = 0
+        resetGameEntities()
+    }
 
-    func movePlayer(direction: PlayerMovementDirection) {
-        guard let player = playerEntity, var playerComp = player.components[PlayerComponent.self] else { return }
+    // Clear existing entities from the scene
+    private func resetGameEntities() {
+        print("GameManager: resetGameEntities called.")
+        playerEntity?.removeFromParent()
+        playerEntity = nil
+        
+        for (_, lane) in activeLanes {
+            lane.removeFromParent()
+        }
+        activeLanes.removeAll()
 
-        var targetPosition = player.position
+        for obstacle in activeObstacles {
+            obstacle.removeFromParent()
+        }
+        activeObstacles.removeAll()
+        
+        // Also remove the main game world entity from its anchor
+        gameWorldEntity.removeFromParent()
+        // And remove the dynamic anchor itself
+        dynamicWorldAnchor?.removeFromParent()
+        dynamicWorldAnchor = nil
+
+        laneIndexCounter = 0
+        print("GameManager: Entities reset.")
+    }
+
+    // Generate the next lane
+    private func generateNextLane() {
+        guard gameWorldEntity.parent != nil else {
+             print("GameManager Warning: Attempted to generate lane but gameWorldEntity has no parent (likely game not started or reset). Skipping.")
+             return
+         }
+        let laneType = LaneType.random()
+        let index = laneIndexCounter
+        laneIndexCounter += 1
+
+        Task { // This task can remain as is (doesn't need explicit @MainActor)
+            do {
+                print("GameManager: Creating lane entity for index \(index) of type \(laneType)")
+                let laneEntity = try await EntityFactory.createLaneEntity(type: laneType, index: index)
+                laneEntity.name = "Lane_\(index)"
+                activeLanes[index] = laneEntity
+                gameWorldEntity.addChild(laneEntity) // Add lane to gameWorldEntity
+                print("GameManager: Lane \(index) added to game world.")
+
+                // Generate obstacles for the lane
+                if laneType != .grass { // Don't spawn obstacles on grass
+                     // Qualify constant
+                    let numberOfObstacles = Int.random(in: 1...Constants.maxObstaclesPerLane)
+                    for _ in 0..<numberOfObstacles {
+                         generateObstacle(forLaneIndex: index, laneType: laneType)
+                    }
+                }
+            } catch {
+                 print("GameManager Error: Failed to create lane entity for index \(index): \(error)")
+                 // Consider how to handle lane creation failure - maybe stop generating?
+            }
+        }
+    }
+    
+    // Generate an obstacle for a specific lane
+    private func generateObstacle(forLaneIndex laneIndex: Int, laneType: LaneType) {
+        guard gameWorldEntity.parent != nil else {
+             print("GameManager Warning: Attempted to generate obstacle but gameWorldEntity has no parent. Skipping.")
+             return
+         }
+        let obstacleType: ObstacleType
+        switch laneType {
+            case .road: obstacleType = ObstacleType.carTypes.randomElement()!
+            case .water: obstacleType = .log
+            default: return // Should not happen based on calling logic
+        }
+        
+        Task { 
+            do {
+                 print("GameManager: Creating obstacle entity of type \(obstacleType) for lane \(laneIndex)")
+                 let obstacleEntity = try await EntityFactory.createObstacleEntity(type: obstacleType, laneIndex: laneIndex)
+                 obstacleEntity.name = "Obstacle_\(laneIndex)_\(obstacleType)"
+                 activeObstacles.insert(obstacleEntity)
+                 gameWorldEntity.addChild(obstacleEntity) // Add obstacle to gameWorldEntity
+                 print("GameManager: Obstacle \(obstacleType) added. Scale from factory: \(obstacleEntity.scale)") // Log scale after adding
+
+            } catch {
+                 print("GameManager Error: Failed to create obstacle entity \(obstacleType) for lane \(laneIndex): \(error)")
+            }
+        }
+    }
+
+    // Handle player input (e.g., tap to move forward)
+    func handleTap(on entity: Entity) {
+        guard gameState == .playing, let player = playerEntity else { return }
+        
+        print("GameManager: Handle tap received on entity: \(entity.name ?? "Unknown")")
+        
+        // Example: Simple move forward on any tap for now
+        // TODO: Implement proper directional movement based on tap location or gesture
+        movePlayer(direction: .forward)
+    }
+    
+    // Move the player
+    func movePlayer(direction: MoveDirection) {
+        guard gameState == .playing, let player = playerEntity else { return }
+
+        var targetPosition = player.position(relativeTo: gameWorldEntity) // Move relative to game world
+        let moveDistance = Constants.laneWidth // Qualify constant
+        let rotationAngle: Float = .pi // 180 degrees for backward
 
         switch direction {
         case .forward:
-            targetPosition.z -= Constants.laneWidth // Move one lane forward (assuming Z is depth)
-            playerComp.currentLaneIndex += 1
-            score = max(score, playerComp.currentLaneIndex) // Update score based on max forward lane
-            print("GameManager: Moving player forward to lane \(playerComp.currentLaneIndex)")
-            // Trigger generation of new lanes if needed
-            Task { await generateAndCleanUpLanes() }
+            targetPosition.z -= moveDistance
+            player.orientation = simd_quatf(angle: 0, axis: [0, 1, 0]) // Face forward
         case .backward:
-            targetPosition.z += Constants.laneWidth
-            playerComp.currentLaneIndex -= 1
-             print("GameManager: Moving player backward to lane \(playerComp.currentLaneIndex)")
-        case .left:
-            targetPosition.x -= Constants.laneWidth // Assuming X is left/right
-             print("GameManager: Moving player left")
-        case .right:
-            targetPosition.x += Constants.laneWidth
-             print("GameManager: Moving player right")
-
+             targetPosition.z += moveDistance
+             player.orientation = simd_quatf(angle: rotationAngle, axis: [0, 1, 0]) // Face backward
+       // case .left: // TODO
+       //     targetPosition.x -= moveDistance
+       // case .right: // TODO
+        //    targetPosition.x += moveDistance
         }
-
-        // Update player component immediately
-        player.components.set(playerComp)
+        
+        print("GameManager: Moving player from \(player.position(relativeTo: gameWorldEntity)) to \(targetPosition)")
 
         // Animate the movement
-        let targetTransform = Transform(scale: player.transform.scale, rotation: player.transform.rotation, translation: targetPosition)
-        player.move(to: targetTransform, relativeTo: player.parent, duration: Constants.playerMoveDuration, timingFunction: .easeInOut)
-
-        // Remove manual collision check - Will be replaced by Collision Events
-        // checkCollision(at: targetPosition)
-    }
-
-    enum PlayerMovementDirection {
-        case forward, backward, left, right
-    }
-
-
-    // --- Level Generation & Cleanup ---
-
-    private func generateAndCleanUpLanes() async {
-        guard let player = playerEntity, let playerComp = player.components[PlayerComponent.self] else { return }
-
-        // Generate lanes ahead
-        let desiredFurthestLane = playerComp.currentLaneIndex + maxVisibleLanes / 2
-        while nextLaneIndex < desiredFurthestLane {
-            await generateNextLane()
-        }
-
-        // Clean up lanes behind
-        let cleanupThreshold = playerComp.currentLaneIndex - maxVisibleLanes / 2
-        activeLanes.removeAll { laneEntity in
-            guard let laneComp = laneEntity.components[LaneComponent.self] else { return false } // Should have component
-            if laneComp.index < cleanupThreshold {
-                print("GameManager: Removing lane \(laneComp.index)")
-                laneEntity.removeFromParent()
-                // Also remove associated obstacles? (Need to track obstacles per lane or query)
-                return true // Remove from activeLanes array
-            }
-            return false
-        }
-    }
-
-
-     private func generateNextLane() async {
-         guard let root = rootEntity else { return }
-
-         // Determine lane type (add more randomness/patterns later)
-         let laneType: LaneComponent.LaneType
-         let randomType = Int.random(in: 0..<10)
-         if randomType < 4 {
-             laneType = .road
-         } else if randomType < 7 {
-             laneType = .water
-         } else {
-             laneType = .grass
-         }
-         // Add train tracks occasionally etc.
-
-         do {
-             let laneEntity = try await EntityFactory.createLaneEntity(type: laneType, index: nextLaneIndex)
-
-             // Position the lane is handled inside the factory now, but we still need to add it
-             // let zPosition = Constants.playerStartPosition.z - (Float(nextLaneIndex) * Constants.laneWidth)
-             // laneEntity.position = [0, 0, zPosition] // Position set in factory
-             // laneEntity.transform.scale = Constants.laneScale // REMOVED: Scale set in factory
-
-             root.addChild(laneEntity)
-             activeLanes.append(laneEntity)
-             print("GameManager: Added \(laneType) lane at index \(nextLaneIndex), positionZ: \(laneEntity.position.z)") // Read position from entity
-
-             nextLaneIndex += 1
-
-         } catch {
-             print("GameManager: Failed to create lane \(nextLaneIndex): \(error)")
-             // Handle error - maybe stop generation?
-         }
-     }
-
-    // --- Obstacle Spawning ---
-
-    private func startObstacleSpawning() {
-        stopObstacleSpawning() // Ensure no duplicate timers
-
-        obstacleSpawnTimer = Timer.scheduledTimer(withTimeInterval: Constants.obstacleSpawnInterval, repeats: true) { [weak self] _ in
-             // Run async task to avoid blocking timer thread
-            Task {
-                 await self?.spawnObstacleOnRandomLane()
+        var transform = player.transform
+        transform.translation = targetPosition
+        // Qualify constant
+        player.move(to: transform, relativeTo: gameWorldEntity, duration: Constants.playerMoveDuration, timingFunction: .easeInOut)
+        
+        // Update score if moved forward
+        if direction == .forward {
+             // Qualify constant
+            let currentLaneIndex = Int(round((player.position.z / Constants.laneWidth) * -1))
+            score = max(score, currentLaneIndex)
+            print("GameManager: Player moved forward. Current Approx Lane Index: \(currentLaneIndex), Score: \(score)")
+            // Check if we need to generate a new lane
+            // Qualify constant
+            if currentLaneIndex > laneIndexCounter - Constants.lanesAheadToGenerate {
+                print("GameManager: Player approaching edge, generating new lane.")
+                generateNextLane()
+                // TODO: Remove distant lanes behind the player
             }
         }
-        print("GameManager: Started obstacle spawning.")
+        
+        // TODO: Collision Detection
+        // checkCollisions()
     }
+    
+    // --- Placeholder for collision checks ---
+    private func checkCollisions() {
+         guard let player = playerEntity else { return }
+         let playerBounds = player.visualBounds(relativeTo: gameWorldEntity)
 
-    private func stopObstacleSpawning() {
-        obstacleSpawnTimer?.invalidate()
-        obstacleSpawnTimer = nil
-        print("GameManager: Stopped obstacle spawning.")
+         for obstacle in activeObstacles {
+             let obstacleBounds = obstacle.visualBounds(relativeTo: gameWorldEntity)
+             if playerBounds.intersects(obstacleBounds) {
+                print("Collision detected with obstacle: \(obstacle.name ?? "Unknown")")
+                gameOver()
+                return
+            }
+        }
+        
+        // Check if player fell in water (conceptual)
+        // Need logic to determine if player's Z position corresponds to a water lane
+        // AND if they are *not* on a log at that Z position.
+        // let currentLaneIndex = ...
+        // if activeLanes[currentLaneIndex]?.laneType == .water && !isOnLog(position: player.position) {
+        //     gameOver()
+        // }
     }
-
-    private func spawnObstacleOnRandomLane() async {
-        guard currentGameState == .playing, let root = rootEntity else { return }
-
-        // Find candidate lanes (e.g., road or water lanes currently visible)
-        let candidateLanes = activeLanes.filter { lane in
-            guard let comp = lane.components[LaneComponent.self] else { return false }
-            return comp.type == .road || comp.type == .water // Only spawn on these types for now
-        }
-
-        guard let targetLane = candidateLanes.randomElement(),
-              let targetLaneComp = targetLane.components[LaneComponent.self] else {
-           // print("GameManager: No suitable lanes for obstacle spawning.")
-            return
-        }
-
-        let obstacleType: ObstacleComponent.ObstacleType = (targetLaneComp.type == .road) ? .car : .log
-
-        do {
-            let obstacleEntity = try await EntityFactory.createObstacleEntity(type: obstacleType, laneIndex: targetLaneComp.index)
-
-            // Determine start position (left or right edge)
-            let direction = obstacleEntity.components[ObstacleComponent.self]?.direction ?? Constants.rightDirection
-            let startX = (direction == Constants.rightDirection) ? Constants.spawnEdgeDistance : -Constants.spawnEdgeDistance
-            let startY = Constants.obstacleYOffset // Adjust vertical position slightly if needed
-            let startZ = targetLane.position.z // Align with the lane's depth
-
-            obstacleEntity.position = [startX, startY, startZ]
-
-            // Add to the root (or maybe the lane entity itself if structured differently)
-            root.addChild(obstacleEntity)
-            // print("GameManager: Spawned \(obstacleType) on lane \(targetLaneComp.index)")
-
-        } catch {
-             print("GameManager: Failed to spawn obstacle: \(error)")
-        }
+    
+    // --- Placeholder: Check if position is on a log ---
+    private func isOnLog(position: SIMD3<Float>) -> Bool {
+        // TODO: Implement check against log obstacle positions/bounds at the player's Z coord
+        return false
     }
+    
+    // Game over logic
+    private func gameOver() {
+        print("GameManager: Game Over! Score: \(score)")
+        gameState = .gameOver
+        // TODO: Add game over effects or UI updates
+    }
+    
+}
 
-
-    // --- Collision Detection ---
-
-    // Remove manual Collision Detection function
-    /*
-     // Basic placeholder - needs proper implementation using RealityKit physics/collision events
-     func checkCollision(at position: SIMD3<Float>) {
-         guard let root = rootEntity else { return }
-         print("GameManager: Checking collision around position \(position)")
-
-         // This is VERY basic. Proper collision needs CollisionComponent and event subscriptions or queries.
-         // Example: Query entities near the player's new position
-
-         // Calculate min/max for BoundingBox initializer
-         let halfExtents = SIMD3<Float>(Constants.laneWidth * 0.8 / 2, 0.5 / 2, Constants.laneWidth * 0.8 / 2)
-         let minPoint = position - halfExtents
-         let maxPoint = position + halfExtents
-         let queryBounds = BoundingBox(min: minPoint, max: maxPoint) // Small box around target
-
-         // Use EntityQuery(where:) and perform query safely
-         guard let scene = root.scene else { return }
-         // Use scene.entities(matching: .overlapping(queryBounds))
-         let nearbyEntities = scene.entities(matching: .overlapping(queryBounds))
-
-         var onSafeSurface = false
-         var hitObstacle = false
-
-         for entity in nearbyEntities {
-              if let laneComp = entity.components[LaneComponent.self] {
-                  if laneComp.type == .grass || laneComp.type == .trainTrack { // Assuming tracks are safe when no train
-                       onSafeSurface = true
-                  }
-                   // Need to check if on a log if the lane is water
-                  else if laneComp.type == .water {
-                       // Further check if position overlaps with a log entity on this lane
-                      if isPositionOnLog(position: position, waterLaneIndex: laneComp.index) {
-                            onSafeSurface = true
-                      }
-                  } else if laneComp.type == .road {
-                      // Road itself isn't safe, need to check for cars
-                      onSafeSurface = false // Assume unsafe unless proven otherwise by no car collision
-                  }
-              } else if let obstacleComp = entity.components[ObstacleComponent.self] {
-                   if obstacleComp.type == .car || obstacleComp.type == .train {
-                       print("GameManager: Collision with obstacle detected!")
-                       hitObstacle = true
-                       break // Found a hit, stop checking
-                   }
-                   // Logs are handled differently (part of safe surface check on water)
-              }
-         }
-
-
-         // Determine outcome based on checks
-         if hitObstacle {
-              gameOver()
-         } else if !onSafeSurface {
-              // Fell in water or hit by something not explicitly checked? Or just landed on road?
-              // If on road, check more accurately for cars. If in water without log -> game over
-              // This logic needs refinement based on precise collision results
-              print("GameManager: Landed on unsafe surface or water!")
-             // Temporarily assume road is safe if no car hit, but water is not
-             if !isPositionOnWater(position: position) {
-                  // on road, likely safe for now in this basic check
-             } else {
-                 gameOver() // Fell in water
-             }
-
-         } else {
-              print("GameManager: Landed safely.")
-              // Player is safe on grass, log, or empty track
-         }
-     }
-     */
-
-     // Placeholder helper functions for collision (Now unused)
-     private func isPositionOnLog(position: SIMD3<Float>, waterLaneIndex: Int) -> Bool {
-         // TODO: Query for log entities specifically on `waterLaneIndex` near `position`
-         return false // Placeholder
-     }
-      private func isPositionOnWater(position: SIMD3<Float>) -> Bool {
-          // TODO: Query for water lane entities near `position`
-          return false // Placeholder
-      }
+// Enum for player movement directions
+enum MoveDirection {
+    case forward, backward // , left, right
 } 
