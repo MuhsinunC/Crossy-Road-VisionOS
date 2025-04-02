@@ -9,25 +9,21 @@ import SwiftUI
 
 @main
 struct Crossy_Road_VisionOSApp: App {
-
-    @State private var appModel = AppModel()
+    // StateObject to manage game state across the app if needed outside the immersive view
+    @State private var gameManager = GameManager()
 
     var body: some Scene {
+        // Main window for initial UI like a start button
         WindowGroup {
-            ContentView()
-                .environment(appModel)
+            ContentView(gameManager: gameManager)
         }
+        .windowStyle(.plain) // Use a standard window
 
-        ImmersiveSpace(id: appModel.immersiveSpaceID) {
-            ImmersiveView()
-                .environment(appModel)
-                .onAppear {
-                    appModel.immersiveSpaceState = .open
-                }
-                .onDisappear {
-                    appModel.immersiveSpaceState = .closed
-                }
+        // Define the immersive space where the game will run
+        ImmersiveSpace(id: "ImmersiveGameSpace") {
+            ImmersiveView(gameManager: gameManager)
         }
-        .immersionStyle(selection: .constant(.mixed), in: .mixed)
-     }
+        // Optional: Define default immersion style if needed
+        // .immersionStyle(selection: .constant(.mixed), in: .mixed)
+    }
 }

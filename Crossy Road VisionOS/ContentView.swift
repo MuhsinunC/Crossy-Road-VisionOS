@@ -1,30 +1,38 @@
-//
-//  ContentView.swift
-//  Crossy Road VisionOS
-//
-//  Created by Muhsinun on 4/1/25.
-//
-
 import SwiftUI
 import RealityKit
-import RealityKitContent
 
 struct ContentView: View {
+    @Environment(\.openImmersiveSpace) var openImmersiveSpace
+    @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
+    @ObservedObject var gameManager: GameManager // Get the manager
 
     var body: some View {
         VStack {
-            Model3D(named: "Scene", bundle: realityKitContentBundle)
-                .padding(.bottom, 50)
+            Text("Crossy Road Vision")
+                .font(.largeTitle)
+                .padding()
 
-            Text("Hello, world!")
+            Button(gameManager.currentGameState == .playing ? "Stop Game" : "Start Game") {
+                Task {
+                    if gameManager.currentGameState == .playing {
+                        await dismissImmersiveSpace()
+                        gameManager.resetGame() // Reset state when stopping
+                    } else {
+                        let result = await openImmersiveSpace(id: "ImmersiveGameSpace")
+                        if case .error = result {
+                            print("Error opening immersive space.")
+                            // Handle error appropriately
+                        }
+                        // Game state will likely be set to .playing within ImmersiveView setup
+                    }
+                }
+            }
+            .padding()
 
-            ToggleImmersiveSpaceButton()
+            // Display score or other info from gameManager if needed here
+            Text("Score: \(gameManager.score)")
+                .font(.title)
         }
         .padding()
     }
-}
-
-#Preview(windowStyle: .automatic) {
-    ContentView()
-        .environment(AppModel())
-}
+} 
