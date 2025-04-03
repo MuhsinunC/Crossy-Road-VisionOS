@@ -1,5 +1,6 @@
 # Local development
 .aider*
+.cursor/
 
 # Secrets
 .env_vars
