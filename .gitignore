@@ -1,6 +1,8 @@
 # Local development
 .aider*
 .cursor/
+.cursorignore
+.cursorrules
 
 # Secrets
 .env_vars
