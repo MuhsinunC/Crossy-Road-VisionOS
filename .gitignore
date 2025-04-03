@@ -1,0 +1,48 @@
+# Local development
+.aider*
+
+# Secrets
+.env_vars
+.vscode/
+
+# Python bytecode and cache (if applicable)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS system files
+.DS_Store
+
+# Xcode user-specific settings
+*.xcuserdatad/
+*.xcuserstate
+
+# Xcode build artifacts
+build/
+DerivedData/
+*.ipa
+*.dSYM
+
+# Swift Package Manager build artifacts (keep Package.resolved)
+.swiftpm/build/
+
+# Carthage dependencies
+Carthage/Checkouts
+Carthage/Build
+
+# Fastlane reports
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Xcode archives
+*.xcarchive
+
+# These files seem to change per-developer, so ignore them if working on a team
+# project.pbxproj
+# *.xcscheme
+
+# Simulator files (less common, but can keep)
+*.xcdevice
