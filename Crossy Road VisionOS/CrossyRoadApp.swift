@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct Crossy_Road_VisionOSApp: App {
+struct CrossyRoadApp: App {
     // StateObject to manage game state across the app if needed outside the immersive view
     @State private var gameManager = GameManager()
 
